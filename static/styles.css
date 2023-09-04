@@ -1,0 +1,12 @@
+.artist-list {
+    list-style: none;
+    padding: 0;
+}
+
+.artist-item {
+    margin-left: 10px; /* Add margin to separate the button */
+}
+
+.artist-item form {
+    display: inline-block;
+}

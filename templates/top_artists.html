@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="/static/styles.css">
+    <title>Top Artists</title>
+</head>
+<body>
+    <h3>Your Top 10 Artists</h3>
+    <ul class="artist-list">
+    {% for top_artist in top_artists %}
+        <li class="artist-item"> 
+            <form action="{{ url_for('create_top_artist_playlist', artist_id=top_artist['id']) }}" method="get">
+                <button type="submit">Create Artist Playlist</button>
+            </form>
+            <span> {{ top_artist['name'] }} </span>
+        </li> 
+    {% endfor %}
+    </ul>
+    <a href="{{ url_for('home') }}">Home</a>
+</body>
+</html>
