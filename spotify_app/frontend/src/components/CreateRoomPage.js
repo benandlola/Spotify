@@ -1,73 +1,104 @@
-import React, { Component } from "react";
-import { Button, Grid, Typography, TextField, FormHelperText, FormControl, Radio, RadioGroup, FormControlLabel } from "@mui/material";
-import { Form, Link } from "react-router-dom";
+import React, { useState } from "react";
+import {
+    Button,
+    Grid,
+    Typography,
+    TextField,
+    FormHelperText,
+    FormControl,
+    Radio,
+    RadioGroup,
+    FormControlLabel,
+} from "@mui/material";
+import { Link, useNavigate } from "react-router-dom";
 
-export default class CreateRoomPage extends Component {
-    defaultVotes = 2
-    constructor(props) {
-        super(props);
-        this.state = {
-            guestCanPause: true,
-            votesToSkip: this.defaultVotes,
-        };
+function CreateRoomPage() {
+    // Set the default number of votes
+    const defaultVotes = 2;
+    // Initialize the navigation function for redirecting to other pages
+    const navigate = useNavigate();
 
-        this.handleRoomButtonPressed = this.handleRoomButtonPressed.bind(this);
-        this.handleVotesChange = this.handleVotesChange.bind(this);
-        this.handleGuestCanPauseChange = this.handleGuestCanPauseChange.bind(this);
-    }
+    // Define the state for room data using useState hook
+    const [roomData, setRoomData] = useState({
+        guestCanPause: true,
+        votesToSkip: defaultVotes,
+    });
 
-    handleVotesChange(e) {
-        this.setState({
+    // Event handler for changing the number of votes
+    const handleVotesChange = (e) => {
+        setRoomData({
+            ...roomData,
             votesToSkip: e.target.value,
         });
-    }
+    };
 
-    handleGuestCanPauseChange(e) {
-        this.setState({
-            guestCanPause: e.target.value === "true" ? true : false,
+    // Event handler for changing the guest control of playback state
+    const handleGuestCanPauseChange = (e) => {
+        setRoomData({
+            ...roomData,
+            guestCanPause: e.target.value === "true",
         });
-    }
+    };
 
-    handleRoomButtonPressed() {
+    // Event handler for creating a room
+    const handleRoomButtonPressed = () => {
+        // Define request options for the API call
         const requestOptions = {
             method: "POST",
-            headers: {"Content-Type": "application/json"},
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                votes_to_skip: this.state.votesToSkip,
-                guest_can_pause: this.state.guestCanPause
+                votes_to_skip: roomData.votesToSkip,
+                guest_can_pause: roomData.guestCanPause,
             }),
         };
-        fetch('/api/create-room', requestOptions)
-        .then((response) => response.json())
-        .then((data) => console.log(daata));
-    } 
 
-    render() {
-        return (<Grid container spacing={1}>
+        // Make an API call to create the room
+        fetch("/api/create-room", requestOptions)
+            .then((response) => response.json())
+            .then((data) => {
+                // Log the API response and navigate to the created room
+                navigate(`/room/${data.code}`);
+            });
+    };
+
+    return (
+        <Grid container spacing={1}>
             <Grid item xs={12} align="center">
                 <Typography component="h4" variant="h4">
                     Create a Room
                 </Typography>
-            </Grid> 
+            </Grid>
             <Grid item xs={12} align="center">
                 <FormControl component="fieldset">
                     <FormHelperText>
                         <div align="center">Guest Control of Playback State</div>
                     </FormHelperText>
-                    <RadioGroup row defaultValue="true" onChange={this.handleGuestCanPauseChange}>
-                        <FormControlLabel value="true" control={<Radio color="primary"/>} label="Play/Pause"></FormControlLabel>
-                        <FormControlLabel value="false" control={<Radio color="secondary"/>} label="No Control"></FormControlLabel>
+                    <RadioGroup
+                        row
+                        value={roomData.guestCanPause.toString()}
+                        onChange={handleGuestCanPauseChange}
+                    >
+                        <FormControlLabel
+                            value="true"
+                            control={<Radio color="primary" />}
+                            label="Play/Pause"
+                        />
+                        <FormControlLabel
+                            value="false"
+                            control={<Radio color="secondary" />}
+                            label="No Control"
+                        />
                     </RadioGroup>
                 </FormControl>
-            </Grid>   
+            </Grid>
             <Grid item xs={12} align="center">
                 <FormControl>
                     <TextField
                         required={true}
                         type="number"
-                        onChange={this.handleVotesChange}
-                        defaultValue={this.defaultVotes}
-                        inputProps={{min: 1, style: {textAlign: "center"}}}
+                        onChange={handleVotesChange}
+                        value={roomData.votesToSkip}
+                        inputProps={{ min: 1, style: { textAlign: "center" } }}
                     />
                     <FormHelperText>
                         <div align="center">Votes Required To Skip Song</div>
@@ -75,15 +106,26 @@ export default class CreateRoomPage extends Component {
                 </FormControl>
             </Grid>
             <Grid item xs={12} align="center">
-                <Button color="secondary" variant="contained" onClick={this.handleRoomButtonPressed}>
+                <Button
+                    color="secondary"
+                    variant="contained"
+                    onClick={handleRoomButtonPressed}
+                >
                     Create a Room
                 </Button>
             </Grid>
             <Grid item xs={12} align="center">
-                <Button color="primary" variant="contained" to="/" component={Link}>
+                <Button
+                    color="primary"
+                    variant="contained"
+                    component={Link}
+                    to="/"
+                >
                     Back
                 </Button>
             </Grid>
-        </Grid>);
-    }
+        </Grid>
+    );
 }
+
+export default CreateRoomPage;

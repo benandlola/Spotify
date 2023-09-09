@@ -5,31 +5,59 @@ from .models import Room
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
-# Create your views here.
+# View for listing all rooms using the ListAPIView
 class RoomView(generics.ListAPIView):
     queryset = Room.objects.all()
     serializer_class = RoomSerializer
 
+# View for getting details about a specific room using an APIView
+class GetRoom(APIView):
+    serializer_class = RoomSerializer
+    lookup_url_kwarg = 'code'
+
+    def get(self, request, format=None):
+        # Retrieve the room code from the request
+        code = request.GET.get(self.lookup_url_kwarg)
+        if code:
+            # Try to find a room with the given code
+            room = Room.objects.filter(code=code)
+            if len(room) > 0:
+                # If the room is found, serialize its data and check if the request is from the host
+                data = RoomSerializer(room[0]).data
+                data['is_host'] = self.request.session.session_key == room[0].host
+                return Response(data, status=status.HTTP_200_OK)
+            return Response({'Room Not Found': 'Invalid Room Code.'}, status=status.HTTP_404_NOT_FOUND)
+
+        return Response({'Bad Request': 'Code parameter not found in request'}, status=status.HTTP_400_BAD_REQUEST)
+
+# View for creating a new room using an APIView
 class CreateRoomView(APIView):
     serializer_class = CreateRoomSerializer
 
     def post(self, request, format=None):
+        # Check if a session exists, create one if not
         if not self.request.session.exists(self.request.session.session_key):
             self.request.session.create()
 
+        # Serialize the data from the request
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
+            # Extract guest_can_pause and votes_to_skip values from the serializer data
             guest_can_pause = serializer.data.get('guest_can_pause')
             votes_to_skip = serializer.data.get('votes_to_skip')
             host = self.request.session.session_key
+
+            # Check if a room already exists for the host
             queryset = Room.objects.filter(host=host)
             if queryset.exists():
+                # If a room exists, update its settings
                 room = queryset[0]
                 room.guest_can_pause = guest_can_pause
                 room.votes_to_skip = votes_to_skip
                 room.save(update_fields=['guest_can_pause', 'votes_to_skip'])
                 return Response(RoomSerializer(room).data, status=status.HTTP_200_OK)
             else:
+                # If no room exists, create a new one
                 room = Room(host=host, guest_can_pause=guest_can_pause, votes_to_skip=votes_to_skip)
                 room.save()
                 return Response(RoomSerializer(room).data, status=status.HTTP_201_CREATED)
