@@ -28,7 +28,7 @@ function Room() {
     }, [roomCode]);
 
     return (
-        <div>
+        <div className="center">
         <h3>{roomCode}</h3>
         <p>Votes: {roomDetails.votesToSkip}</p>
         <p>Guest Can Pause: {roomDetails.guestCanPause.toString()}</p>
