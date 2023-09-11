@@ -75,7 +75,7 @@ function CreateRoomPage(props) {
                 successMsg: response.ok ? 'Room updated successfully!' : '',
                 errorMsg: response.ok ? '' : 'Error updating room.',
             });
-            roomData.updateCallback(); //if this isnt here the alert pops up, if it is it redirects to room 
+            roomData.updateCallback();
         });   
     };
 
