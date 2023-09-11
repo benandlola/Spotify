@@ -47,11 +47,11 @@ function CreateRoomPage(props) {
 
         // Make an API call to create the room
         fetch("/api/create-room", requestOptions)
-            .then((response) => response.json())
-            .then((data) => {
-                // Log the API response and navigate to the created room
-                navigate(`/room/${data.code}`);
-            });
+        .then((response) => response.json())
+        .then((data) => {
+            // Log the API response and navigate to the created room
+            navigate(`/room/${data.code}`);
+        });
     };
 
     // Event handler for updating a room

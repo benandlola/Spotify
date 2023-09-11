@@ -6,7 +6,7 @@ import CreateRoomPage from "./CreateRoomPage";
 function Room(props) {
     // Access the 'roomCode' parameter from the URL
     const { roomCode } = useParams();
-    const navigate = useNavigate(); // Initialize the navigate function
+    const navigate = useNavigate(); // Initialize the navigate function 
 
     // Define state to store room details and initialize with default values
     const [roomDetails, setRoomDetails] = useState({
@@ -14,9 +14,14 @@ function Room(props) {
         guestCanPause: false,
         isHost: false,
         showSettings: false,
+        spotifyAuthenticated: false,
     });
 
-    
+    // Use the fetchRoomDetails function in your useEffect
+    useEffect(() => {
+        fetchRoomDetails();
+    }, [roomCode]);
+
     // Define the fetchRoomDetails function
     const fetchRoomDetails = () => {
         // Fetch room details from the API based on the 'roomCode'
@@ -35,13 +40,26 @@ function Room(props) {
             guestCanPause: data.guest_can_pause,
             isHost: data.is_host,
             });
+            if (roomDetails.isHost) {
+                authenticateSpotify();
+            }
         });
     };
 
-    // Use the fetchRoomDetails function in your useEffect
-    useEffect(() => {
-        fetchRoomDetails();
-    }, [roomCode]);
+    const authenticateSpotify = () => {
+        fetch("/spotify/is-authenticated")
+        .then((response) => response.json())
+        .then((data) => {
+            setRoomDetails({ ...roomDetails, spotifyAuthenticated: data.status });
+            if (!data.status) {
+                fetch("/spotify/get-auth-url")
+                .then((response) => response.json())
+                .then((data) => {
+                    window.location.replace(data.url);
+                });
+            }
+        });
+    }
 
     // Leave the room
     const leaveButtonPressed = () => {
