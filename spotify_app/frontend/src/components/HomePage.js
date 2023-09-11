@@ -3,12 +3,12 @@ import RoomJoinPage from "./RoomJoinPage";
 import CreateRoomPage from "./CreateRoomPage";
 import Room from "./Room";
 import { Grid, Button, ButtonGroup, Typography } from "@mui/material";
-import { BrowserRouter as Router, Routes, Route, Link} from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Link, Navigate} from "react-router-dom";
 
 function HomePage() {
     // State to store the room code
     const [roomCode, setRoomCode] = useState(null);
-
+ 
     useEffect(() => {
       // Fetch the user's room data when the component mounts
       fetch("/api/user-in-room")
@@ -42,15 +42,21 @@ function HomePage() {
         );
     }
   
+    const clearRoomCode = () => {
+      setRoomCode(null);
+    }
+
     return (
       <Router>
         <Routes>
           <Route path="/join" element={<RoomJoinPage/>}/>
           <Route path="/create" element={<CreateRoomPage/>}/>
-          <Route path="/room/:roomCode" element={<Room/>}/>
+          <Route path="/room/:roomCode" 
+            element={<Room leaveRoomCallback={clearRoomCode} />}
+          />
           <Route
             path="/"
-            element={renderHomePage()}
+            element={roomCode ? <Navigate to={`/room/${roomCode}`} /> : renderHomePage()}
           />
         </Routes>
       </Router>
