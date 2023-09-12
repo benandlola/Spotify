@@ -1,8 +1,34 @@
 import React from "react";
 import { Grid, Typography, Card, LinearProgress, IconButton } from '@mui/material';
-import { PlayArrow, SkipNext, Pause, SkipPrevious } from '@mui/icons-material';
+import { PlayArrow, SkipNext, Pause } from '@mui/icons-material';
 
-function MusicPlayer(props) {
+export default function MusicPlayer(props) {
+    const songProgress = (props.time / props.duration) * 100;
+
+    const PauseSong = () => {
+        const requestOptions = {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+        }
+        fetch('/spotify/pause', requestOptions);
+    }
+
+    const PlaySong = () => {
+        const requestOptions = {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+        }
+        fetch('/spotify/play', requestOptions);
+    }
+
+    const SkipSong = () => {
+        const requestOptions = {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+        }
+        fetch('/spotify/skip', requestOptions);
+    }
+
     return (
         <Card>
             <Grid container alignItems="center">
@@ -17,21 +43,16 @@ function MusicPlayer(props) {
                         {props.artist}
                     </Typography>
                     <div>
-                        <IconButton>
-                            <SkipPrevious />
-                        </IconButton>
-                        <IconButton>
+                        <IconButton onClick={props.is_playing ? PauseSong : PlaySong}>
                             {props.is_playing ? <Pause /> : <PlayArrow/>}
                         </IconButton>
-                        <IconButton>
-                            <SkipNext />
+                        <IconButton onClick={SkipSong}>
+                            {props.votes} / {props.votes_required} <SkipNext />
                         </IconButton>
                     </div>
                 </Grid>
             </Grid>
-            <LinearProgress variant="determinate" value={(props.time / props.duration) * 100}/>  
+            <LinearProgress variant="determinate" value={songProgress}/>  
         </Card>
     );
 }
-
-export default MusicPlayer;

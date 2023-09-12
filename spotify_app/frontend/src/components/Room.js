@@ -4,7 +4,7 @@ import { Grid, Button, Typography } from '@mui/material';
 import CreateRoomPage from "./CreateRoomPage";
 import MusicPlayer from "./MusicPlayer";
 
-function Room(props) {
+export default function Room(props) {
     // Access the 'roomCode' parameter from the URL
     const { roomCode } = useParams();
     const navigate = useNavigate(); // Initialize the navigate function 
@@ -32,11 +32,12 @@ function Room(props) {
         })
         .then((data) => {
             // Update the state with the retrieved room details
-            setRoomDetails({
-            votesToSkip: data.votes_to_skip,
-            guestCanPause: data.guest_can_pause,
-            isHost: data.is_host,
-            });
+            setRoomDetails((prevState) => ({
+                ...prevState,
+                votesToSkip: data.votes_to_skip,
+                guestCanPause: data.guest_can_pause,
+                isHost: data.is_host,
+            }));
             if (roomDetails.isHost) {
                 authenticateSpotify();
             }
@@ -57,7 +58,10 @@ function Room(props) {
         fetch("/spotify/is-authenticated")
         .then((response) => response.json())
         .then((data) => {
-            setRoomDetails({ ...roomDetails, spotifyAuthenticated: data.status });
+            setRoomDetails((prevState) => ({
+                ...prevState,
+                spotifyAuthenticated: data.status,
+            }));
             if (!data.status) {
                 fetch("/spotify/get-auth-url")
                 .then((response) => response.json())
@@ -78,8 +82,11 @@ function Room(props) {
             }
         })
         .then((data) => {
-            setRoomDetails({ ...roomDetails, song: data });
-        });
+            setRoomDetails((prevState) => ({
+                ...prevState,
+                song: data,
+            }));
+        });      
     }
 
     // Leave the room
@@ -149,5 +156,3 @@ function Room(props) {
         </Grid>
     );
 }
-
-export default Room;

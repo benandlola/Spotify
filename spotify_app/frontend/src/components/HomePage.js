@@ -5,7 +5,7 @@ import Room from "./Room";
 import { Grid, Button, ButtonGroup, Typography } from "@mui/material";
 import { BrowserRouter as Router, Routes, Route, Link, Navigate} from "react-router-dom";
 
-function HomePage() {
+export default function HomePage() {
     // State to store the room code
     const [roomCode, setRoomCode] = useState(null);
  
@@ -31,10 +31,10 @@ function HomePage() {
             <Grid item xs={12} align="center">
             <ButtonGroup disableElevation variant="contained" color="secondary">
                 <Button color="secondary" to="/join" component={Link}>
-                Join a Room
+                  Join a Room
                 </Button>
-                <Button color="primary" to="/create" component={Link}>
-                Create a Room
+                <Button color="secondary" to="/create" component={Link}>
+                  Create a Room
                 </Button>
             </ButtonGroup>
             </Grid>
@@ -62,5 +62,3 @@ function HomePage() {
       </Router>
     );
 }
-
-export default HomePage;

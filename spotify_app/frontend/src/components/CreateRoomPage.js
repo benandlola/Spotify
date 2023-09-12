@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Button, Grid, Typography, TextField, FormHelperText, FormControl, Radio, RadioGroup, FormControlLabel, Collapse, Alert} from "@mui/material";
 import { Link, useNavigate } from "react-router-dom";
 
-function CreateRoomPage(props) {
+export default function CreateRoomPage(props) {
     const defaultRoomData = {
         votesToSkip : 2,
         guestCanPause : true,
@@ -178,5 +178,3 @@ function CreateRoomPage(props) {
         </Grid>
     );
 }
-
-export default CreateRoomPage;

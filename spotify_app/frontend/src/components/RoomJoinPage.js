@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { TextField, Button, Grid, Typography } from "@mui/material";
 import { Link, useNavigate } from "react-router-dom";
 
-function RoomJoinPage() {
+export default function RoomJoinPage() {
   // Define state variables for room code and error message
   const [roomCode, setRoomCode] = useState("");
   const [error, setError] = useState("");
@@ -75,5 +75,3 @@ function RoomJoinPage() {
     </Grid>
   );
 }
-
-export default RoomJoinPage;
