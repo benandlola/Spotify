@@ -2,64 +2,65 @@ from django.shortcuts import render
 from rest_framework.views import APIView
 from requests import Request, post
 from django.conf import settings 
+from django.utils import timezone
 from rest_framework.response import Response
 from rest_framework import status
-from .util import *
 from django.shortcuts import redirect
 from api.models import Room
 from .models import Vote
+import spotipy
+from spotipy.oauth2 import SpotifyOAuth
+from flask import session
 
-# Define a class for handling Spotify authentication URL generation
+BASE_URL = 'https://api.spotify.com/v1/'
+
+sp_oauth = SpotifyOAuth(    
+    settings.CLIENT_ID,
+    settings.CLIENT_SECRET,
+    settings.REDIRECT_URI,
+    scope='user-library-read playlist-modify-public playlist-modify-private user-top-read user-read-recently-played playlist-read-private playlist-read-collaborative user-read-playback-state user-modify-playback-state user-read-currently-playing'
+)
+
+def is_spotify_authenticated(request):
+    token_info = request.session.get('token_info')
+    if token_info:
+        if sp_oauth.is_token_expired(token_info):
+            token_info = sp_oauth.refresh_access_token(token_info['refresh_token'])
+            sp_oauth.cache_handler.save_token_to_cache(token_info)
+            request.session['token_info'] = token_info
+        return True
+        
+    return False
+
+def validate(request):
+    if is_spotify_authenticated(request):
+        return spotipy.Spotify(auth=request.session['token_info']['access_token'])
+    else:
+        return Response({}, status=status.HTTP_401_UNAUTHORIZED)   
+
 class AuthURL(APIView):
     def get(self, request, format=None):
-        # Define the desired Spotify API scopes for authorization
-        scopes = 'user-library-read playlist-modify-public playlist-modify-private user-top-read user-read-recently-played playlist-read-private playlist-read-collaborative user-read-playback-state user-modify-playback-state user-read-currently-playing'
-        
-        # Generate the Spotify authorization URL
-        url = Request('GET', 'https://accounts.spotify.com/authorize', params={
-            'scope': scopes,
-            'response_type': 'code',
-            'redirect_uri': settings.REDIRECT_URI,
-            'client_id': settings.CLIENT_ID
-        }).prepare().url
-
-        # Return the generated URL as a response
+        url = sp_oauth.get_authorize_url()
         return Response({'url': url}, status=status.HTTP_200_OK)
 
-# Define a callback function for handling Spotify authorization callback
 def spotify_callback(request, format=None):
     # Retrieve the authorization code and error (if any) from the callback URL parameters
     code = request.GET.get('code')
+    token_info = sp_oauth.get_access_token(code)
 
-    # Send a POST request to Spotify to exchange the authorization code for access tokens
-    response = post('https://accounts.spotify.com/api/token', data={
-        'grant_type': 'authorization_code',
-        'code': code,
-        'redirect_uri': settings.REDIRECT_URI,
-        'client_id': settings.CLIENT_ID,
-        'client_secret': settings.CLIENT_SECRET
-    }).json()
-
-    # Extract relevant information from the response
-    access_token = response.get('access_token')
-    token_type = response.get('token_type')
-    refresh_token = response.get('refresh_token')
-    expires_in = response.get('expires_in')
-
-    # Create a session if it doesn't exist
     if not request.session.exists(request.session.session_key):
         request.session.create()
 
-    # Update or create user tokens in the session
-    update_or_create_user_tokens(
-        request.session.session_key, access_token, token_type, expires_in, refresh_token)
+    request.session['token_info'] = token_info
 
-    # Redirect to the frontend (assuming a URL pattern named 'frontend:' exists)
     return redirect('frontend:')
 
 class IsAuthenticated(APIView):
     def get(self, request, format=None):
-        is_authenticated = is_spotify_authenticated(self.request.session.session_key)
+        print(request, 'REQUEST')
+        print(request.session, 'SESSION')
+        print(request.session.session_key, 'SESSION KEY')
+        is_authenticated = is_spotify_authenticated(self.request.session)
         return Response({'status': is_authenticated}, status=status.HTTP_200_OK)
     
 class CurrentSong(APIView):
@@ -70,9 +71,9 @@ class CurrentSong(APIView):
             room = room[0]
         else:
             return Response({}, status=status.HTTP_404_NOT_FOUND)
-        host = room.host
-        endpoint = "player/currently-playing"
-        response = execute_spotify_api_request(host, endpoint)
+        
+        sp = validate(request)  
+        response =  sp.current_user_playing_track()
 
         if 'error' in response or 'item' not in response:
             return Response({}, status=status.HTTP_204_NO_CONTENT)
@@ -107,7 +108,6 @@ class CurrentSong(APIView):
         }
 
         self.update_room_song(room, song_id)
-
         return Response(song, status=status.HTTP_200_OK)
     
     def update_room_song(self, room, song_id):
@@ -118,21 +118,21 @@ class CurrentSong(APIView):
             Vote.objects.filter(room=room).delete()
     
 class PauseSong(APIView):
-    def put(self, response, format=None):
+    def put(self, request, format=None):
         room_code = self.request.session.get('room_code')
         room = Room.objects.filter(code=room_code).first()
         if self.request.session.session_key == room.host or room.guest_can_pause:
-            pause_song(room.host)
+            validate(request).pause_playback()
             return Response({}, status=status.HTTP_204_NO_CONTENT)
         
         return Response({}, status=status.HTTP_403_FORBIDDEN)
     
 class PlaySong(APIView):
-    def put(self, response, format=None):
+    def put(self, request, format=None):
         room_code = self.request.session.get('room_code')
         room = Room.objects.filter(code=room_code).first()
         if self.request.session.session_key == room.host or room.guest_can_pause:
-            play_song(room.host)
+            validate(request).start_playback()
             return Response({}, status=status.HTTP_204_NO_CONTENT)
         
         return Response({}, status=status.HTTP_403_FORBIDDEN)
@@ -144,12 +144,12 @@ class SkipSong(APIView):
         votes = Vote.objects.filter(room=room, song_id=room.current_song)
         votes_needed = room.votes_to_skip
 
-
         if self.request.session.session_key == room.host or len(votes) + 1 >= votes_needed:
             votes.delete()
-            skip_song(room.host)
+            validate(request).next_track()
         else:
             vote = Vote(user=self.request.session.session_key, room=room, song_id=room.current_song)
             vote.save()
         
         return Response({}, status=status.HTTP_204_NO_CONTENT)
+    
