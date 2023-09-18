@@ -8,21 +8,19 @@ var colors = new Array(
     [255,0,255],
     [255,128,0]);
 
-  var step = 0;
-  //color table indices for: 
-  // current color left
-  // next color left
-  // current color right
-  // next color right
-  var colorIndices = [0,1,2,3];
+var step = 0;
+//color table indices for: 
+// current color left
+// next color left
+// current color right
+// next color right
+var colorIndices = [0,1,2,3];
 
-  //transition speed
-  var gradientSpeed = 0.002;
+//transition speed
+var gradientSpeed = 0.002;
 
-  function updateGradient()
-  {
-
-    if ( $===undefined ) return;
+function updateGradient() {
+  if ( $===undefined ) return;
 
   var c0_0 = colors[colorIndices[0]];
   var c0_1 = colors[colorIndices[1]];
@@ -40,9 +38,9 @@ var colors = new Array(
   var b2 = Math.round(istep * c1_0[2] + step * c1_1[2]);
   var color2 = "rgb("+r2+","+g2+","+b2+")";
 
-   $('#gradient').css({
-     background: "-webkit-gradient(linear, left top, right top, from("+color1+"), to("+color2+"))"}).css({
-      background: "-moz-linear-gradient(left, "+color1+" 0%, "+color2+" 100%)"});
+  $('body').css({
+    background: "-webkit-gradient(linear, left top, right top, from("+color1+"), to("+color2+"))"}).css({
+    background: "-moz-linear-gradient(left, "+color1+" 0%, "+color2+" 100%)"});
 
     step += gradientSpeed;
     if ( step >= 1 )
@@ -59,4 +57,4 @@ var colors = new Array(
     }
   }
 
-  setInterval(updateGradient,10);
+setInterval(updateGradient,10);

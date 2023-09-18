@@ -11,7 +11,7 @@ export default function Room(props) {
 
     // Define state to store room details and initialize with default values
     const [roomDetails, setRoomDetails] = useState({
-        votesToSkip: 2,
+        votesToSkip: 1,
         guestCanPause: false,
         isHost: false,
         showSettings: false,

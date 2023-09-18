@@ -4,7 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 
 export default function CreateRoomPage(props) {
     const defaultRoomData = {
-        votesToSkip : 2,
+        votesToSkip : 1,
         guestCanPause : true,
         update : false,
         roomCode : null,
