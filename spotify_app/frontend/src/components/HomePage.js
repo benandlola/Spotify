@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import RoomJoinPage from "./RoomJoinPage";
 import CreateRoomPage from "./CreateRoomPage";
+import GeneratePlaylist from "./GeneratePlaylist";
 import Room from "./Room";
 import { Grid, Button, ButtonGroup, Typography } from "@mui/material";
 import { BrowserRouter as Router, Routes, Route, Link, Navigate} from "react-router-dom";
@@ -38,6 +39,11 @@ export default function HomePage() {
                 </Button>
             </ButtonGroup>
             </Grid>
+            <Grid item xs={12} align="center">
+              <Button color="primary" variant="contained" to="/generate" component={Link}>
+                Generate Playlists
+              </Button>
+            </Grid>
         </Grid>
         );
     }
@@ -51,6 +57,7 @@ export default function HomePage() {
         <Routes>
           <Route path="/join" element={<RoomJoinPage/>}/>
           <Route path="/create" element={<CreateRoomPage/>}/>
+          <Route path="generate" element={<GeneratePlaylist/>}/>
           <Route path="/room/:roomCode" 
             element={<Room leaveRoomCallback={clearRoomCode} />}
           />
